@@ -26,5 +26,8 @@ if [ -z "$1" ]; then
         exit 1
 fi
 
+# Finish importing the information about the secret key / token
+/usr/bin/gpg --homedir "$(dirname $1)" --card-status > /dev/null
+
 decrypt_gpg "$1"
 exit $?
