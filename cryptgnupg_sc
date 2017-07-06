@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -e
+
+PREREQ="cryptroot"
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Hooks for loading gnupg software and key into the initramfs
+
+# Check whether cryptroot hook has installed decrypt_gnupg_sc script
+if [ ! -x ${DESTDIR}/lib/cryptsetup/scripts/decrypt_gnupg_sc ] ; then
+    exit 0
+fi
+
+# Install cryptroot key files into initramfs
+keys=$(sed 's/^\(.*,\|\)key=//; s/,.*//' ${DESTDIR}/conf/conf.d/cryptroot)
+
+if [ "${keys}" != "none" ]; then
+    if [ -z "${keys}" ]; then
+        echo "$0: Missing key files in ${DESTDIR}/conf/conf.d/cryptroot" >&2
+        cat ${DESTDIR}/conf/conf.d/cryptroot >&2
+        exit 1
+    fi
+    for key in ${keys} ; do
+        keydir=$(dirname ${key})
+	echo "WARNING: GnuPG key $key is copied to initramfs" >&2
+	echo "WARNING: GnuPG secret keyring ${keydir}/secring.gpg is copied" \
+             "to initramfs" >&2
+        if [ ! -d ${DESTDIR}/${keydir} ] ; then
+            mkdir -p ${DESTDIR}/${keydir}
+        fi
+        chmod 700 ${DESTDIR}/${keydir}
+        cp -p ${key} ${DESTDIR}/${key}
+        cp -p ${keydir}/pubring.gpg ${DESTDIR}/${keydir}
+        cp -p ${keydir}/secring.gpg ${DESTDIR}/${keydir}
+        if [ -e ${keydir}/gpg.conf ] ; then
+            cp -p ${keydir}/gpg.conf ${DESTDIR}/${keydir}
+        fi
+    done
+fi
+
+# Install gnupg software
+copy_exec /usr/bin/gpg
+
+exit 0
