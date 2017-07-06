@@ -1,24 +1,29 @@
 #!/bin/sh
 
+# quick hack for starting pcscd
+# only needed for card readers, which are not supported by the gpg internal ccid
+mkdir -p /var/run
+pcscd &
+
 decrypt_gpg () {
-	echo "Performing GPG key decryption ..." >&2
-	if ! /lib/cryptsetup/askpass \
-		"Enter smartcard PIN or passphrase for key $1: " | \
-		/usr/bin/gpg -q --batch --homedir "$(dirname $1)" \
-		--trustdb-name /dev/null --passphrase-fd 0 --decrypt $1; then
-		return 1
-	fi
-	return 0
+        echo "Performing GPG key decryption ..." >&2
+        if ! /lib/cryptsetup/askpass \
+                "Enter smartcard PIN or passphrase for key $1: " | \
+                /usr/bin/gpg -q --batch --pinentry-mode loopback --homedir "$(dirname $1)" \
+                --trustdb-name /dev/null --passphrase-fd 0 --decrypt $1; then
+                return 1
+        fi
+        return 0
 }
 
 if [ ! -x /usr/bin/gpg ]; then
-	echo "$0: /usr/bin/gpg is not available" >&2
-	exit 1
+        echo "$0: /usr/bin/gpg is not available" >&2
+        exit 1
 fi
 
 if [ -z "$1" ]; then
-	echo "$0: missing key as argument" >&2
-	exit 1
+        echo "$0: missing key as argument" >&2
+        exit 1
 fi
 
 decrypt_gpg "$1"

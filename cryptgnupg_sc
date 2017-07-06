@@ -18,7 +18,7 @@ esac
 
 . /usr/share/initramfs-tools/hook-functions
 
-# Hooks for loading gnupg software and key into the initramfs
+# Hooks for loading Gnupg software and key into the initramfs
 
 # Check whether cryptroot hook has installed decrypt_gnupg_sc script
 if [ ! -x ${DESTDIR}/lib/cryptsetup/scripts/decrypt_gnupg_sc ] ; then
@@ -53,6 +53,25 @@ if [ "${keys}" != "none" ]; then
 fi
 
 # Install gnupg software
+echo "WARNING: /usr/bin/gpg is copied to initramfs" >&2
 copy_exec /usr/bin/gpg
+echo "WARNING: /usr/bin/gpg-agent is copied to initramfs" >&2
+copy_exec /usr/bin/gpg-agent
+echo "WARNING: /usr/lib/gnupg/scdaemon is copied to initramfs" >&2
+copy_exec /usr/lib/gnupg/scdaemon
 
+# some more libs for pcscd
+# only needed for card readers, which are not supported by the gpg internal ccid
+copy_exec /usr/sbin/pcscd
+copy_exec /usr/lib/pcsc/drivers/serial/libccidtwin.so
+copy_exec /usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Linux/libccid.so
+copy_exec /usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Info.plist
+copy_exec /etc/libccid_Info.plist
+if uname -r | grep -q amd64; then
+        copy_exec /usr/lib/x86_64-linux-gnu/libpcsclite.so.1.0.0
+        copy_exec /lib/x86_64-linux-gnu/libgcc_s.so.1
+else
+        copy_exec /usr/lib/i386-linux-gnu/libpcsclite.so.1.0.0
+        copy_exec /lib/i386-linux-gnu/libgcc_s.so.1
+fi
 exit 0
