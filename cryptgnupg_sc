@@ -37,15 +37,15 @@ if [ "${keys}" != "none" ]; then
     for key in ${keys} ; do
         keydir=$(dirname ${key})
 	echo "WARNING: GnuPG key $key is copied to initramfs" >&2
-	echo "WARNING: GnuPG secret keyring ${keydir}/secring.gpg is copied" \
+	echo "WARNING: GnuPG secret keys in ${keydir}/private-keys-v1.d are copied" \
              "to initramfs" >&2
         if [ ! -d ${DESTDIR}/${keydir} ] ; then
             mkdir -p ${DESTDIR}/${keydir}
         fi
         chmod 700 ${DESTDIR}/${keydir}
         cp -p ${key} ${DESTDIR}/${key}
-        cp -p ${keydir}/pubring.gpg ${DESTDIR}/${keydir}
-        cp -p ${keydir}/secring.gpg ${DESTDIR}/${keydir}
+        cp -p ${keydir}/pubring.kbx ${DESTDIR}/${keydir}
+        cp -p -r ${keydir}/private-keys-v1.d ${DESTDIR}/${keydir}
         if [ -e ${keydir}/gpg.conf ] ; then
             cp -p ${keydir}/gpg.conf ${DESTDIR}/${keydir}
         fi
