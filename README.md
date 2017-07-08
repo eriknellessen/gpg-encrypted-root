@@ -44,18 +44,17 @@ cd /root
 cryptsetup luksAddKey /dev/mobidisk/crtest keyfifo
 ``` 
 
-Continue on one of the two terminals (other can be closed):
+We will now create a directory containing information about your secret key. This information will be copied into the initramfs. When booting, this information tells GnuPG how to access your secret key to decrypt the root volume key. Continue on one of the two terminals (other can be closed):
 ``` 
 rm keyfifo
-gpg --export-options export-minimal --export {YOURKEYID} | gpg --no-default-keyring --keyring /etc/keys/pubring.gpg --secret-keyring /etc/keys/secring.gpg --import
-gpg --no-default-keyring --keyring /etc/keys/pubring.gpg --secret-keyring /etc/keys/secring.gpg --card-status
+gpg --export-options export-minimal --export-secret-keys {YOURKEYID} | gpg --homedir "/etc/keys/" --import
+gpg --homedir "/etc/keys/" --card-status
 ``` 
 Before you proceed, check if the decryption works on the current system. If this fails, it also will not work after rebooting. You should really fix the problem then before rebooting.
 
 To check the decryption, execute the script in the following way:
 ``` 
-cd /etc/keys
-/lib/cryptsetup/scripts/decrypt_gnupg_sc cryptkey.gpg
+/lib/cryptsetup/scripts/decrypt_gnupg_sc /etc/keys/cryptkey.gpg
 ``` 
 If this works, proceed.
  
