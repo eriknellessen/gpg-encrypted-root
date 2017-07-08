@@ -67,8 +67,8 @@ And finally:
 ``` 
 update-initramfs -u
 update-initramfs: Generating /boot/initrd.img-4.9.0-3-amd64
-WARNING: GnuPG key /etc/keys/crypt_root_volume_key.gpg is copied to initramfs
-WARNING: GnuPG secret keyring /etc/keys/secring.gpg is copied to initramfs
+WARNING: GnuPG key /etc/keys/cryptkey.gpg is copied to initramfs
+WARNING: GnuPG secret keys in /etc/keys/private-keys-v1.d are copied to initramfs
 WARNING: /usr/bin/gpg is copied to initramfs
 WARNING: /usr/bin/gpg-agent is copied to initramfs
 WARNING: /usr/lib/gnupg/scdaemon is copied to initramfs
