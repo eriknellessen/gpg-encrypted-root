@@ -90,6 +90,11 @@ Now you will be prompted for any LUKS password, and decrypt_gnupg_sc is never in
 
 ## License
 GPG encrypted root volume
+Copyright (C) 2004-2005 Wesley W. Terpstra <terpstra@debian.org>
+Copyright (C) 2005-2006 Michael Gebetsroither <michael.geb@gmx.at>
+Copyright (C) 2006-2008 David Härdeman <david@hardeman.nu>
+Copyright (C) 2005-2008 Jonas Meurer <jonas@freesources.org>
+Copyright (C) 2009,2014 Peter Lebbing <peter@digitalbrains.com>
 Copyright (C) 2018 Erik Nellessen
 
 This program is free software; you can redistribute it and/or
