@@ -26,7 +26,8 @@ if [ ! -x ${DESTDIR}/lib/cryptsetup/scripts/decrypt_gnupg_sc ] ; then
 fi
 
 # Install cryptroot key files into initramfs
-keys=$(sed 's/^\(.*,\|\)key=//; s/,.*//' ${DESTDIR}/conf/conf.d/cryptroot)
+#keys=$(sed 's/^\(.*,\|\)key=//; s/,.*//' ${DESTDIR}/conf/conf.d/cryptroot)
+keys=/etc/keys/crypt_root_volume_key.gpg
 
 if [ "${keys}" != "none" ]; then
     if [ -z "${keys}" ]; then
