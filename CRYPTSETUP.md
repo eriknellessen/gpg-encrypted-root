@@ -14,17 +14,24 @@ Make sure to replace "DEADBEEF" by your GPG key's fingerprint.
 
 Next, we will add the key for device decryption of our root volume. We will do this with different commands than in the tutorial (/dev/vda5 is my encrypted root volume, you might need to replace it with yours):
 ```
-touch luks_encryption_key
-chmod 600 luks_encryption_key
-/lib/cryptsetup/scripts/decrypt_gnupg-sc /etc/keys/cryptkey.gpg > luks_encryption_key
-cryptsetup luksAddKey /dev/vda5 <(cat luks_encryption_key)
-rm luks_encryption_key
+cd /root
+mkfifo -m 700 keyfifo
+/lib/cryptsetup/scripts/decrypt_gnupg-sc /etc/keys/cryptkey.gpg >keyfifo
 ```
 
+Open a second root terminal and enter:
+```
+cd /root
+cryptsetup luksAddKey /dev/vda5 keyfifo
+rm keyfifo
+```
+
+You will be asked to enter an existing password for the LUKS container by the `cryptsetup` line above.
+
 The next step is to alter the file /etc/crypttab. Since the debian installer should have created it, I suppose it looks something like this:
-``` 
+```
 vda5_crypt UUID=37b9967a-f696-4f4d-802b-96c2ab1d92c5 none luks,discard
-``` 
+```
 
 We now change it to look like this:
 ```
