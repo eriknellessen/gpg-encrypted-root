@@ -5,28 +5,40 @@ The corresponding documentation of the cryptsetup feature can be found [here](ht
 
 I assume that you created an encrypted root volume using the debian installer. This tutorial is about adding the possibility to also decrypt the root volume with a smartcard.
 
-We follow the tutorial linked above with some modifications and extra steps. First, we create an encryption key exactly as stated in the tutorial:
+We follow the tutorial linked above with some modifications and extra steps. First, we create an encryption key. We add an option to encrypt the encryption key with our public key and also with a password. The idea is to choose a very secure password and to store it in a safe place. It shall be used to decrypt the disk when we lost/locked/destroyed/etc. the smart card.
+
 ```
-dd if=/dev/random bs=1 count=256 | gpg --recipient DEADBEEF --output /etc/keys/cryptkey.gpg --encrypt
+KEYFILE=$(mktemp --tmpdir=/dev/shm/)
+dd if=/dev/urandom bs=1 count=256 of=$KEYFILE
+gpg --recipient DEADBEEF --output=/etc/keys/cryptkey.gpg --encrypt --symmetric $KEYFILE
 ```
 
 Make sure to replace "DEADBEEF" by your GPG key's fingerprint.
 
 Next, we will add the key for device decryption of our root volume. We will do this with different commands than in the tutorial (/dev/vda5 is my encrypted root volume, you might need to replace it with yours):
-```
-cd /root
-mkfifo -m 700 keyfifo
-/lib/cryptsetup/scripts/decrypt_gnupg-sc /etc/keys/cryptkey.gpg >keyfifo
-```
 
-Open a second root terminal and enter:
 ```
-cd /root
-cryptsetup luksAddKey /dev/vda5 keyfifo
-rm keyfifo
+cryptsetup luksAddKey /dev/vda5 $KEYFILE
+rm $KEYFILE
 ```
 
 You will be asked to enter an existing password for the LUKS container by the `cryptsetup` line above.
+
+Now there should be two key slots activated for decrypting the root volume. The first one was created by the debian installer, the second one was created when performing the steps in this tutorial. If you would like to confirm that there are two active key slots, you can do so by analyzing the output of the following command:
+
+```
+cryptsetup luksDump /dev/vda5
+```
+
+Make sure to replace /dev/vda5 by your device.
+
+We will now remove the key added by the debian installer by executing the following command and typing the password we entered in the debian installer:
+
+```
+cryptsetup luksRemoveKey /dev/vda5
+```
+
+When reexecuting the luksDump command, you should only see the second key slot now.
 
 The next step is to alter the file /etc/crypttab. Since the debian installer should have created it, I suppose it looks something like this:
 ```
