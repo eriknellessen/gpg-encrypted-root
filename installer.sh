@@ -76,3 +76,12 @@ gpg --export-options export-minimal --export-secret-keys "$PUBLIC_KEY_ID" | gpg 
 echo "Your smart card is now reserved for the gpg command that exported your key stub. We need to free the smart card from reservations to proceed. Please eject and reinsert your smart card. Then press any key to continue."
 read -s -n 1
 gpg --homedir "/etc/keys/" --card-status
+ 
+echo "We will now test if the decryption script is working. Please eject and reinsert your smart card. Then press any key to continue."
+read -s -n 1
+/lib/cryptsetup/scripts/decrypt_gnupg_sc /etc/keys/cryptkey.gpg > /dev/null
+ 
+awk '{$3 = "/etc/keys/cryptkey.gpg"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
+awk '{$4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
+ 
+update-initramfs -u
