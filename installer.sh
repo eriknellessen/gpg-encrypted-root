@@ -6,7 +6,8 @@
 # * The HDD needs to be already encrypted with a password (this can be done via the debian installer).
 #
 # Things to improve:
-# * The smartcard has to be ejected and reinserted a lot, because it is reserved after executing gpg commands. Is it possible to cancel the reservation by e.g. restarting processes?
+# * Check if pcscd is really needed or could be removed.
+# * kill -09 is used to kill scdaemon. It would be better to kill the process gently.
 # * It is assumed that slot 0 of the encrypted device is the existing password slot. This should be checked before removing the slot.
  
 set -e
@@ -19,8 +20,6 @@ mkdir -p /lib/cryptsetup/scripts/
 cp decrypt_gnupg_sc /lib/cryptsetup/scripts/
  
 # Have root get your public key
-echo "Please eject and reinsert your smart card to make sure it is not reserved for any processes. Then press any key to continue."
-read -s -n 1
 echo "The following encryption key could be found on your smartcard:"
 gpg --card-status | grep -A 1 "Encryption key"
 PUBLIC_KEY_ID=`gpg --card-status | grep "Encryption key" | cut -d ':' -f2- | tr -d ' ' | tr -d '\n'`
@@ -61,7 +60,7 @@ mkfifo -m 700 keyfifo
 gpg -d /etc/keys/cryptkey.gpg >keyfifo &
  
 cd /root
-PS3="The key will now be added to the encrypted device. You will be asked for your smart card PIN. Please choose the device to add the smartcard decryption to: "
+PS3="The key will now be added to the encrypted device. You will be asked for the password the device is currently encrypted with. You will then be asked for your smart card PIN. Please choose the device to add the smartcard decryption to: "
 unset OPTIONS
 OPTIONS=$(lsblk --fs --list --paths | grep 'crypto_LUKS' | awk '{print $1}')
 select OPTION in "${OPTIONS[@]}" "Quit"; do
@@ -83,11 +82,15 @@ done
 rm -f keyfifo
  
 gpg --export-options export-minimal --export-secret-keys "$PUBLIC_KEY_ID" | gpg --homedir "/etc/keys/" --import
-echo "Your smart card is now reserved for the gpg command that exported your key stub. We need to free the smart card from reservations to proceed. Please eject and reinsert your smart card. Then press any key to continue."
-read -s -n 1
+# For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
+# gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
+kill -09 `pgrep scdaemon`
 gpg --homedir "/etc/keys/" --card-status
  
-echo "We will now test if the decryption script is working. Please eject and reinsert your smart card. Then press any key to continue."
+# For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
+# gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
+kill -09 `pgrep scdaemon`
+echo "We will now test if the decryption script is working. You will be asked for your smart card PIN. Press any key to continue."
 read -s -n 1
 /lib/cryptsetup/scripts/decrypt_gnupg_sc /etc/keys/cryptkey.gpg > /dev/null
  
@@ -96,7 +99,10 @@ awk '{$4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/cryptta
  
 update-initramfs -u
  
-echo "We will now remove the password slot from the encrypted device. Please eject and reinsert your smart card. Then press any key to continue."
+# For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
+# gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
+kill -09 `pgrep scdaemon`
+echo "We will now remove the password slot from the encrypted device. You will be asked for your smart card PIN. Press any key to continue."
 read -s -n 1
 rm -f keyfifo
 mkfifo -m 700 keyfifo
