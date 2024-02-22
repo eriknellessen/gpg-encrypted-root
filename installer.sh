@@ -1,5 +1,14 @@
 #!/bin/bash
  
+# Requirements:
+# * pcscd needs to be installed.
+# * You need to have your OpenPGP public key as a key file or on a key server.
+# * The HDD needs to be already encrypted with a password (this can be done via the debian installer).
+#
+# Things to improve:
+# * The smartcard has to be ejected and reinserted a lot, because it is reserved after executing gpg commands. Is it possible to cancel the reservation by e.g. restarting processes?
+# * It is assumed that slot 0 of the encrypted device is the existing password slot. This should be checked before removing the slot.
+ 
 set -e
 set -x
  
@@ -52,7 +61,7 @@ mkfifo -m 700 keyfifo
 gpg -d /etc/keys/cryptkey.gpg >keyfifo &
  
 cd /root
-PS3="Please choose the device to add the smartcard decryption to: "
+PS3="The key will now be added to the encrypted device. You will be asked for your smart card PIN. Please choose the device to add the smartcard decryption to: "
 unset OPTIONS
 OPTIONS=$(lsblk --fs --list --paths | grep 'crypto_LUKS' | awk '{print $1}')
 select OPTION in "${OPTIONS[@]}" "Quit"; do
@@ -87,4 +96,10 @@ awk '{$4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/cryptta
  
 update-initramfs -u
  
-gpg -d /etc/keys/cryptkey.gpg | cryptsetup --key-file=- luksKillSlot "$ENCRYPTED_DEVICE" 0
+echo "We will now remove the password slot from the encrypted device. Please eject and reinsert your smart card. Then press any key to continue."
+read -s -n 1
+rm -f keyfifo
+mkfifo -m 700 keyfifo
+gpg -d /etc/keys/cryptkey.gpg >keyfifo &
+cryptsetup --key-file=keyfifo luksKillSlot "$ENCRYPTED_DEVICE" 0
+rm -f keyfifo
