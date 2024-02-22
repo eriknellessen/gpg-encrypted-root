@@ -58,7 +58,8 @@ OPTIONS=$(lsblk --fs --list --paths | grep 'crypto_LUKS' | awk '{print $1}')
 select OPTION in "${OPTIONS[@]}" "Quit"; do
 	case $OPTION in
 		/dev/*)
-			cryptsetup luksAddKey "$OPTION" keyfifo
+			ENCRYPTED_DEVICE=$OPTION
+			cryptsetup luksAddKey "$ENCRYPTED_DEVICE" keyfifo
 			break
 			;;
 		"Quit")
@@ -85,3 +86,5 @@ awk '{$3 = "/etc/keys/cryptkey.gpg"; print}' /etc/crypttab > /etc/crypttab.tmp.b
 awk '{$4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
  
 update-initramfs -u
+ 
+gpg -d /etc/keys/cryptkey.gpg | cryptsetup --key-file=- luksKillSlot "$ENCRYPTED_DEVICE" 0
