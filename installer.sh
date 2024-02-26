@@ -9,6 +9,7 @@
 # * Check if pcscd is really needed or could be removed.
 # * kill -09 is used to kill scdaemon. It would be better to kill the process gently.
 # * It is assumed that slot 0 of the encrypted device is the existing password slot. This should be checked before removing the slot.
+# * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed and the manipulation is non-idempotent
  
 set -e
 set -x
