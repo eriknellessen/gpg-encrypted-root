@@ -9,7 +9,7 @@
 # * Check if pcscd is really needed or could be removed.
 # * kill -09 is used to kill scdaemon. It would be better to kill the process gently.
 # * It is assumed that slot 0 of the encrypted device is the existing password slot. This should be checked before removing the slot.
-# * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed and the manipulation is non-idempotent
+# * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed
  
 set -e
 set -x
@@ -96,7 +96,7 @@ read -s -n 1
 /lib/cryptsetup/scripts/decrypt_gnupg_sc /etc/keys/cryptkey.gpg > /dev/null
  
 awk '{$3 = "/etc/keys/cryptkey.gpg"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
-awk '{$4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
+awk '/,keyscript=decrypt_gnupg_sc/ {found=1} {} END{if (!found) $4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
  
 update-initramfs -u
  
