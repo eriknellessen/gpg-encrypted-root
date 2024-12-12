@@ -8,7 +8,6 @@
 # Things to improve:
 # * Check if pcscd is really needed or could be removed.
 # * kill -09 is used to kill scdaemon. It would be better to kill the process gently.
-# * It is assumed that slot 0 of the encrypted device is the existing password slot. This should be checked before removing the slot.
 # * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed
  
 set -e
@@ -103,6 +102,13 @@ update-initramfs -u
 # For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
 # gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
 kill -09 `pgrep scdaemon`
+if cryptsetup --dump-json-metadata luksDump "$ENCRYPTED_DEVICE" | python3 -c "import sys,json; keyslots = json.load(sys.stdin)['keyslots']; return 0 if len(keyslots) == 1 and '0' in keyslots.keys() else return -1"; then
+    echo "Exactly one key slot with the identifier 0 found. Continuing..."
+else
+    cryptsetup --dump-json-metadata luksDump "$ENCRYPTED_DEVICE" | python3 -c "import sys,json; keyslots = json.load(sys.stdin)['keyslots']; print('Not exactly one key slot with the identifier 0 found. Key slot identifiers: ' + str(keyslots.keys()))";
+    return -1
+fi
+
 echo "We will now remove the password slot from the encrypted device. You will be asked for your smart card PIN. Press any key to continue."
 read -s -n 1
 rm -f keyfifo
