@@ -1,7 +1,7 @@
 #!/bin/bash
  
 # Requirements:
-# * pcscd needs to be installed.
+# * pcscd and jq need to be installed.
 # * You need to have your OpenPGP public key as a key file or on a key server.
 # * The HDD needs to be already encrypted with a password (this can be done via the debian installer).
 #
@@ -9,16 +9,16 @@
 # * Check if pcscd is really needed or could be removed.
 # * kill -09 is used to kill scdaemon. It would be better to kill the process gently.
 # * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed
- 
+
 set -e
 set -x
- 
+
 # Copy scripts
 mkdir -p /etc/initramfs-tools/hooks/
 cp cryptgnupg_sc /etc/initramfs-tools/hooks/
 mkdir -p /lib/cryptsetup/scripts/
 cp decrypt_gnupg_sc /lib/cryptsetup/scripts/
- 
+
 # Have root get your public key
 echo "The following encryption key could be found on your smartcard:"
 gpg --card-status | grep -A 1 "Encryption key"
@@ -46,7 +46,7 @@ do
 			;;
 	esac
 done
- 
+
 # Create key file encrypted with both gpg key and password
 GPG_TTY=$(tty)
 export GPG_TTY
@@ -58,7 +58,7 @@ cd /root
 rm -f keyfifo
 mkfifo -m 700 keyfifo
 gpg -d /etc/keys/cryptkey.gpg >keyfifo &
- 
+
 cd /root
 PS3="The key will now be added to the encrypted device. You will be asked for the password the device is currently encrypted with. You will then be asked for your smart card PIN. Please choose the device to add the smartcard decryption to: "
 unset OPTIONS
@@ -80,33 +80,36 @@ select OPTION in "${OPTIONS[@]}" "Quit"; do
 	esac
 done
 rm -f keyfifo
- 
+
 gpg --export-options export-minimal --export-secret-keys "$PUBLIC_KEY_ID" | gpg --homedir "/etc/keys/" --import
 # For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
 # gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
 kill -09 `pgrep scdaemon`
 gpg --homedir "/etc/keys/" --card-status
- 
+
 # For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
 # gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
 kill -09 `pgrep scdaemon`
 echo "We will now test if the decryption script is working. You will be asked for your smart card PIN. Press any key to continue."
 read -s -n 1
 /lib/cryptsetup/scripts/decrypt_gnupg_sc /etc/keys/cryptkey.gpg > /dev/null
- 
+
 awk '{$3 = "/etc/keys/cryptkey.gpg"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
 awk '/,keyscript=decrypt_gnupg_sc/ {found=1} {} END{if (!found) $4 = $4",keyscript=decrypt_gnupg_sc"; print}' /etc/crypttab > /etc/crypttab.tmp.bak && mv /etc/crypttab.tmp.bak /etc/crypttab
- 
+
 update-initramfs -u
- 
+
 # For an unknown reason, kindly killing scdaemon does not work at this point. So we use kill -09.
 # gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
 kill -09 `pgrep scdaemon`
-if cryptsetup --dump-json-metadata luksDump "$ENCRYPTED_DEVICE" | python3 -c "import sys,json; keyslots = json.load(sys.stdin)['keyslots']; return 0 if len(keyslots) == 1 and '0' in keyslots.keys() else return -1"; then
+NUMBER_OF_KEY_SLOTS=$(cryptsetup --dump-json-metadata luksDump /dev/vda5 | jq -r '.keyslots | length')
+KEY_SLOT_IDENTIFIER=$(cryptsetup --dump-json-metadata luksDump /dev/vda5 | jq -r '.keyslots | keys[]')
+
+if [ "${NUMBER_OF_KEY_SLOTS}" == "1" ] && [ "${KEY_SLOT_IDENTIFIER}" == "0" ]; then
     echo "Exactly one key slot with the identifier 0 found. Continuing..."
 else
-    cryptsetup --dump-json-metadata luksDump "$ENCRYPTED_DEVICE" | python3 -c "import sys,json; keyslots = json.load(sys.stdin)['keyslots']; print('Not exactly one key slot with the identifier 0 found. Key slot identifiers: ' + str(keyslots.keys()))";
-    return -1
+    echo "Not exactly one key slot with the identifier 0 found. Key slot identifiers: ${KEY_SLOT_IDENTIFIER}"
+    exit 1
 fi
 
 echo "We will now remove the password slot from the encrypted device. You will be asked for your smart card PIN. Press any key to continue."
