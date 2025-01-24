@@ -1,12 +1,6 @@
 #!/bin/bash
  
-# Requirements:
-# * pcscd and jq need to be installed.
-# * You need to have your OpenPGP public key as a key file or on a key server.
-# * The HDD needs to be already encrypted with a password (this can be done via the debian installer).
-#
 # Things to improve:
-# * Check if pcscd is really needed or could be removed.
 # * kill -09 is used to kill scdaemon. It would be better to kill the process gently.
 # * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed
 
