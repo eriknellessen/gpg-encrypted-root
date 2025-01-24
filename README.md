@@ -24,9 +24,8 @@ This is the easy and automated way to use this software. I generally recommend u
 You just need to execute the installer script as root. It will interactively ask you for the necessary information.
 ```
 git clone https://gitlab.com/eriknellessen/gpg-encrypted-root
-cd gpg-encrypted-root
-chmod +x installer.sh
 su -
+apt-get install scdaemon jq
 #cd back to the gpg-encrypted-root-folder, then start the installer
 ./installer.sh
 ```
