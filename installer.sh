@@ -103,9 +103,9 @@ update-initramfs -u
 # gpg-connect-agent "SCD KILLSCD" "SCD BYE" /bye
 kill -09 `pgrep scdaemon`
 NUMBER_OF_KEY_SLOTS=$(cryptsetup --dump-json-metadata luksDump /dev/vda5 | jq -r '.keyslots | length')
-KEY_SLOT_IDENTIFIER=$(cryptsetup --dump-json-metadata luksDump /dev/vda5 | jq -r '.keyslots | keys[]')
+KEY_SLOT_IDENTIFIER=$(cryptsetup --dump-json-metadata luksDump /dev/vda5 | jq -r '.keyslots | keys[0]')
 
-if [ "${NUMBER_OF_KEY_SLOTS}" == "1" ] && [ "${KEY_SLOT_IDENTIFIER}" == "0" ]; then
+if [ "${NUMBER_OF_KEY_SLOTS}" == "2" ] && [ "${KEY_SLOT_IDENTIFIER}" == "0" ]; then
     echo "Exactly one key slot with the identifier 0 found. Continuing..."
 else
     echo "Not exactly one key slot with the identifier 0 found. Key slot identifiers: ${KEY_SLOT_IDENTIFIER}"
