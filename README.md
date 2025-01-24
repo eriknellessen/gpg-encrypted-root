@@ -15,7 +15,7 @@ As a requirement to use this software, you should encrypt your root volume with 
 This is the easy and automated way to use this software. I generally recommend using the software this way. If you experience problems or want to look into details, it might make sense to also read the next section that explains the manual way to use this software.
 
 ### Requirements for using the installer:
-1. You should have encrypted your root volume with a password via the debian installer.
+1. You should have encrypted your root volume with a password via the debian installer (this password will be removed when running the installer and another password will be added as a fallback).
 2. scdaemon and jq need to be installed on your system
 3. You need to have your OpenPGP public key as a key file or on a key server.
 4. Your OpenPGP smartcard should be inserted into your card reader.
