@@ -7,7 +7,7 @@ After the debian stretch release, the scripts were not working anymore. The reas
 
 ## Encrypting your root volume with a password
 
-As a requirement to use this software, you should encrypt your root volume with a password via the debian installer. You can use the automated debian partitioner to create an encrypted LVM partition table, so you end up with one encrypted logical partition that includes your root partition, your swap partition, and possibly other partitions. This screenshot shows what the result should look like:
+As a requirement to use this software, you should encrypt your root volume with a password via the debian installer. You can use the guided debian partitioning process to create an encrypted LVM partition table ("Guided - use entire disk and set up encrypted LVM"), so you end up with one encrypted logical partition that includes your root partition, your swap partition, and possibly other partitions. This screenshot shows what the result should look like:
 ![partitiontable.png](images/partitiontable.png)
 
 ## Configure smartcard decryption of your root volume via the installer
