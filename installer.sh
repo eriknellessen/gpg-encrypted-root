@@ -11,7 +11,6 @@
 # * The manipulation of the file /etc/crypttab changes all lines without making sure the lines should really be changed
 
 set -e
-set -x
 
 # Copy scripts
 mkdir -p /etc/initramfs-tools/hooks/
