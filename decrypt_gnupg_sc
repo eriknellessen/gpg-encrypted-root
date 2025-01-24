@@ -3,7 +3,6 @@
 # quick hack for starting pcscd
 # only needed for card readers, which are not supported by the gpg internal ccid
 mkdir -p /var/run
-pcscd &
 
 decrypt_gpg () {
         echo "Performing GPG key decryption ..." >&2
