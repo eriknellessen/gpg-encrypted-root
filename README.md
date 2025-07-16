@@ -3,7 +3,34 @@ Encrypt your root volume with an OpenPGP smartcard
 
 This repository is based on the software and information from [this tutorial](http://digitalbrains.com/2014/gpgcryptroot) by Peter Lebbing.
 
-After the debian stretch release, the scripts were not working anymore. The reason was, that gpg was updated to version 2 in debian stretch. Thus the command line options changed and the call to gpg did not work as expected anymore. I adapted the scripts to the new gpg version.
+After the debian stretch release, the scripts were not working anymore. The reason was, that gpg was updated to version 2 in debian stretch. Thus the command line options changed and the call to gpg did not work as expected anymore. I adapted the scripts to the new gpg version and added an installer.
+
+## Encrypting your root volume with a password
+
+As a requirement to use this software, you should encrypt your root volume with a password via the debian installer. You can use the guided debian partitioning process to create an encrypted LVM partition table ("Guided - use entire disk and set up encrypted LVM"), so you end up with one encrypted logical partition that includes your root partition, your swap partition, and possibly other partitions. This screenshot shows what the result should look like:
+![partitiontable.png](images/partitiontable.png)
+
+## Configure smartcard decryption of your root volume via the installer
+
+This is the easy and automated way to use this software. I generally recommend using the software this way. If you experience problems or want to look into details, it might make sense to also read the next section that explains the manual way to use this software.
+
+### Requirements for using the installer:
+1. You should have encrypted your root volume with a password via the debian installer (this password will be removed when running the installer and another password will be added as a fallback).
+2. scdaemon and jq need to be installed on your system
+3. You need to have your OpenPGP public key as a key file or on a key server.
+4. Your OpenPGP smartcard should be inserted into your card reader.
+
+### Using the installer
+You just need to execute the installer script as root. It will interactively ask you for the necessary information.
+```
+git clone https://gitlab.com/eriknellessen/gpg-encrypted-root
+su -
+apt-get install scdaemon jq
+#cd back to the gpg-encrypted-root-folder, then start the installer
+./installer.sh
+```
+
+## Manually configure smartcard decryption of your root volume
 
 This mini-guide is for advanced users; I assume you understand all the commands involved. I recommend reading the scripts to see what they are like.
  

@@ -26,7 +26,8 @@ if [ ! -x ${DESTDIR}/lib/cryptsetup/scripts/decrypt_gnupg_sc ] ; then
 fi
 
 # Install cryptroot key files into initramfs
-keys=$(sed 's/^\(.*,\|\)key=//; s/,.*//' ${DESTDIR}/conf/conf.d/cryptroot)
+#keys=$(sed 's/^\(.*,\|\)key=//; s/,.*//' ${DESTDIR}/conf/conf.d/cryptroot)
+keys="/etc/keys/cryptkey.gpg"
 
 if [ "${keys}" != "none" ]; then
     if [ -z "${keys}" ]; then
@@ -60,18 +61,4 @@ copy_exec /usr/bin/gpg-agent
 echo "WARNING: /usr/lib/gnupg/scdaemon is copied to initramfs" >&2
 copy_exec /usr/lib/gnupg/scdaemon
 
-# some more libs for pcscd
-# only needed for card readers, which are not supported by the gpg internal ccid
-copy_exec /usr/sbin/pcscd
-copy_exec /usr/lib/pcsc/drivers/serial/libccidtwin.so
-copy_exec /usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Linux/libccid.so
-copy_exec /usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Info.plist
-copy_exec /etc/libccid_Info.plist
-if uname -r | grep -q amd64; then
-        copy_exec /usr/lib/x86_64-linux-gnu/libpcsclite.so.1.0.0
-        copy_exec /lib/x86_64-linux-gnu/libgcc_s.so.1
-else
-        copy_exec /usr/lib/i386-linux-gnu/libpcsclite.so.1.0.0
-        copy_exec /lib/i386-linux-gnu/libgcc_s.so.1
-fi
 exit 0
